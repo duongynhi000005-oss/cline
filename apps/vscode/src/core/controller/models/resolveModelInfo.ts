@@ -152,7 +152,11 @@ function pickFromCatalog(
 	requestedModelId: string,
 	allowCustomModelIds: boolean,
 ) {
-	const matchedRequested = Boolean(requestedModelId) && result.models.has(requestedModelId)
+	const baseRequestedModelId =
+		requestedModelId && !result.models.has(requestedModelId) && requestedModelId.includes(":")
+			? requestedModelId.slice(0, requestedModelId.lastIndexOf(":"))
+			: requestedModelId
+	const matchedRequested = Boolean(baseRequestedModelId) && result.models.has(baseRequestedModelId)
 
 	// For custom-model-id providers, never substitute the catalog default for an
 	// unrecognized requested id — the user's id is authoritative.
@@ -160,8 +164,9 @@ function pickFromCatalog(
 		return undefined
 	}
 
+	const lookupModelId = matchedRequested ? baseRequestedModelId : result.defaultModelId
 	const modelId = matchedRequested ? requestedModelId : result.defaultModelId
-	const modelInfo = modelId ? result.models.get(modelId) : undefined
+	const modelInfo = lookupModelId ? result.models.get(lookupModelId) : undefined
 	if (!modelId || !modelInfo) {
 		return undefined
 	}
